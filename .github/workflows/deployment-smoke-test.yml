@@ -1,0 +1,26 @@
+name: Deployment Smoke Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: "Base URL of the deployed application"
+        required: true
+        type: string
+
+jobs:
+  smoke-test:
+    name: Smoke Test Deployed App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run deployment smoke test
+        run: python scripts/smoke_test.py --base-url "${{ inputs.app_url }}"
