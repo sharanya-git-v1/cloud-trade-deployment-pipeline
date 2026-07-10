@@ -1,35 +1,38 @@
 # CI/CD Flow
 
-This project uses GitHub Actions for CI automation.
+This project uses GitHub Actions for CI and image publishing.
 
-## Current CI Pipeline
+## Pipeline Jobs
 
-The current pipeline runs automatically on:
+### 1. Config Validation
 
-- Pushes to the `main` branch
-- Pull requests
+Validates `config/dev.yml`, `config/uat.yml`, and `config/prod.yml` using a Python script.
 
-## Current Pipeline Steps
+This prevents invalid environment configuration from reaching deployment.
 
-1. Checkout repository
-2. Install .NET 8
-3. Restore .NET dependencies
-4. Build the .NET solution
-5. Run automated tests
-6. Install Python 3.12
-7. Install Python dependencies
-8. Validate environment config files
+### 2. Build and Test
 
-## Why This Matters
+Restores .NET dependencies, builds the solution, and runs automated xUnit tests.
 
-The CI pipeline acts as an automated quality gate. It ensures that code builds successfully, automated tests pass, and environment configuration files are valid before further deployment steps are added.
+### 3. Docker Smoke Test
 
-## Planned Future Steps
+Builds the Docker image, starts the container, and checks `/health`.
 
-Later phases will extend the pipeline to include:
+This proves the packaged container actually runs.
 
-1. Docker image build
-2. Docker image push to Amazon ECR
-3. Terraform plan
-4. AWS deployment
-5. Smoke test after deployment
+### 4. Publish Image to ECR
+
+On pushes to `main`, GitHub Actions assumes an AWS IAM role using OIDC, logs into Amazon ECR, and pushes the Docker image with:
+
+- short Git commit SHA tag
+- `latest` tag
+
+## Deployment Smoke Test
+
+A separate manual workflow runs a Python smoke test against the deployed ALB URL.
+
+It validates:
+
+- `/health`
+- `/version`
+- `/trades`

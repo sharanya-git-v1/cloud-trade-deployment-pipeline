@@ -1,6 +1,8 @@
 # Cloud Trade Deployment Pipeline
 
-This is a portfolio DevOps/CI/CD project that demonstrates how to automate the deployment of a small cloud application using GitHub Actions, Docker, Terraform, AWS, and Python automation scripts.
+This is a DevOps/CI/CD project that demonstrates how to automate the delivery of a small cloud application using GitHub Actions, Docker, Terraform, AWS, and Python automation scripts.
+
+The application is intentionally simple. The main focus is the delivery workflow: validation, testing, containerization, infrastructure as code, cloud deployment, and smoke testing.
 
 ## Project Goal
 
@@ -9,60 +11,93 @@ Build a simple mock trade API and automate the delivery flow:
 ```text
 Git commit
 → GitHub Actions CI pipeline
-→ tests
 → config validation
-→ build/package
-→ Docker image
-→ Terraform infrastructure provisioning
-→ AWS deployment
-→ smoke test
+→ build and tests
+→ Docker image build
+→ Docker smoke test
+→ push image to Amazon ECR
+→ Terraform AWS deployment
+→ ECS Fargate runtime
+→ ALB smoke test
 → documentation
 ```
 
 ## Application
 
-The application will be a simple .NET 8 Minimal API with endpoints such as:
+The app is a .NET 8 Minimal API with these endpoints:
 
-- `/health`
-- `/version`
-- `/config`
-- `/trades`
+- `/health` — health check endpoint
+- `/version` — deployed app/version information
+- `/config` — environment configuration
+- `/trades` — mock trade data
 
-The app is intentionally simple because the main focus is DevOps automation.
-
-## Target Skills
-
-This project is designed to practise:
+## Tech Stack
 
 - Git and GitHub
 - GitHub Actions
-- .NET 8
+- .NET 8 Minimal API
+- xUnit tests
+- Python automation scripts
 - Docker
-- Python automation
-- Terraform
-- AWS deployment
-- Smoke testing
-- Technical documentation
-
-## Planned AWS Architecture
-
-The final deployment target will use:
-
 - Amazon ECR
 - Amazon ECS Fargate
 - Application Load Balancer
 - CloudWatch Logs
-- IAM roles
-- Terraform-managed infrastructure
+- IAM / GitHub OIDC
+- Terraform
 
-## Project Phases
+## AWS Architecture
 
-1. Phase 0 — Project setup and repo structure
-2. Phase 1 — Create local API
-3. Phase 2 — Add automated tests
-4. Phase 3 — Add config validation script
-5. Phase 4 — Add GitHub Actions CI pipeline
-6. Phase 5 — Dockerize the app
-7. Phase 6 — Add Terraform AWS infrastructure
-8. Phase 7 — Deploy to AWS
-9. Phase 8 — Smoke test and documentation
+```text
+User / Smoke Test
+       ↓
+Application Load Balancer
+       ↓
+ECS Fargate Service
+       ↓
+Docker container running .NET API
+       ↓
+Image pulled from Amazon ECR
+       ↓
+Logs sent to CloudWatch
+```
+
+## CI/CD Pipeline
+
+The GitHub Actions pipeline is split into separate jobs:
+
+1. Config Validation
+2. Build and Test
+3. Docker Smoke Test
+4. Publish Image to Amazon ECR
+
+On pushes to `main`, the pipeline builds the app, runs tests, validates config, builds the Docker image, smoke-tests the container, assumes an AWS IAM role using GitHub OIDC, and pushes the image to ECR.
+
+## Infrastructure as Code
+
+Terraform provisions the AWS resources, including:
+
+- ECR repository
+- ECR lifecycle policy
+- GitHub Actions IAM role using OIDC
+- ECS cluster
+- ECS task definition
+- ECS service
+- ECS task execution role
+- CloudWatch log group
+- Application Load Balancer
+- Target group
+- Security groups
+
+## Deployment Verification
+
+The deployed app is verified using:
+
+- Manual curl checks
+- Browser checks against ALB DNS
+- Python smoke test script
+- Manual GitHub Actions deployment smoke test workflow
+
+## Cost Safety
+
+This project uses AWS resources that may incur charges, especially the Application Load Balancer and ECS Fargate runtime. Runtime resources are destroyed when not in use. AWS Budgets are configured to alert on spend.
