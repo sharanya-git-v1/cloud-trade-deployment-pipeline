@@ -7,9 +7,35 @@ on:
   pull_request:
 
 jobs:
-  placeholder:
+  build-test-validate:
+    name: Build, Test and Validate Config
     runs-on: ubuntu-latest
 
     steps:
-      - name: Placeholder
-        run: echo "CI pipeline will be added in a later phase"
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore .NET dependencies
+        run: dotnet restore CloudTradeDeployment.sln
+
+      - name: Build .NET solution
+        run: dotnet build CloudTradeDeployment.sln --configuration Release --no-restore
+
+      - name: Run .NET tests
+        run: dotnet test CloudTradeDeployment.sln --configuration Release --no-build
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate environment config files
+        run: python scripts/validate_config.py
