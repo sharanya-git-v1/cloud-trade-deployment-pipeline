@@ -75,3 +75,4 @@ app.MapGet("/trades", () =>
 app.Run();
 
 record Trade(int Id, string Symbol, string Side, int Quantity, decimal Price);
+public partial class Program { }
