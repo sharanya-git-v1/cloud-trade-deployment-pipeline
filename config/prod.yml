@@ -1,0 +1,9 @@
+environment: prod
+app:
+  name: cloud-trade-api
+  version: 0.1.0
+  log_level: warning
+
+trade_settings:
+  max_trade_count: 100
+  enable_mock_data: false

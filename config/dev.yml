@@ -1,0 +1,9 @@
+environment: dev
+app:
+  name: cloud-trade-api
+  version: 0.1.0
+  log_level: debug
+
+trade_settings:
+  max_trade_count: 10
+  enable_mock_data: true

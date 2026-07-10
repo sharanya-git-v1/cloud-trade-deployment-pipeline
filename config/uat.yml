@@ -1,0 +1,9 @@
+environment: uat
+app:
+  name: cloud-trade-api
+  version: 0.1.0
+  log_level: information
+
+trade_settings:
+  max_trade_count: 50
+  enable_mock_data: true
