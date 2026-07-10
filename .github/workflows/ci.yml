@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test-validate:
-    name: Build, Test and Validate Config
+    name: Build, Test, Validate and Dockerize
     runs-on: ubuntu-latest
 
     steps:
@@ -39,3 +39,39 @@ jobs:
 
       - name: Validate environment config files
         run: python scripts/validate_config.py
+
+      - name: Build Docker image
+        run: docker build -f app/src/TradeApi/Dockerfile -t cloud-trade-api:${{ github.sha }} .
+
+      - name: Run Docker container
+        run: |
+          docker run -d \
+            --name cloud-trade-api \
+            -p 5000:8080 \
+            -e APP_VERSION=${{ github.sha }} \
+            -e APP_ENVIRONMENT=ci \
+            -e APP_LOG_LEVEL=information \
+            cloud-trade-api:${{ github.sha }}
+
+      - name: Smoke test Docker container
+        run: |
+          for i in {1..10}; do
+            if curl -f http://localhost:5000/health; then
+              echo "Container smoke test passed"
+              exit 0
+            fi
+            echo "Waiting for container to start..."
+            sleep 2
+          done
+
+          echo "Container did not become healthy"
+          docker logs cloud-trade-api
+          exit 1
+
+      - name: Show Docker logs
+        if: always()
+        run: docker logs cloud-trade-api || true
+
+      - name: Stop Docker container
+        if: always()
+        run: docker rm -f cloud-trade-api || true
